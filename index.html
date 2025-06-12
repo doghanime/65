@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <title>RGB 色塊調整器</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      text-align: center;
+      background-color: #f3f3f3;
+      padding: 30px;
+    }
+
+    h2 {
+      margin-bottom: 10px;
+    }
+
+    .info {
+      font-size: 20px;
+      font-weight: bold;
+      margin-bottom: 20px;
+    }
+
+    #color-box {
+      width: 200px;
+      height: 200px;
+      margin: 20px auto;
+      border-radius: 10px;
+      box-shadow: 0 0 8px rgba(0, 0, 0, 0.3);
+      transition: background-color 0.3s;
+    }
+
+    .slider-group {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin: 10px 0;
+    }
+
+    .slider-group label {
+      width: 30px;
+      font-weight: bold;
+    }
+
+    .slider-group input[type="range"] {
+      width: 200px;
+      margin: 0 10px;
+    }
+
+    .slider-group span {
+      width: 40px;
+      display: inline-block;
+      text-align: left;
+    }
+  </style>
+</head>
+<body>
+  <div class="info">學號：<span style="color:black">5B0G0023</span>　姓名：杜柏勳</div>
+  <div id="color-box"></div>
+
+  <!-- RGB 滑桿 -->
+  <my-slider label="R" color="R" value="255"></my-slider>
+  <my-slider label="G" color="G" value="0"></my-slider>
+  <my-slider label="B" color="B" value="157"></my-slider>
+
+  <script>
+    // 建立 MySlider 元件
+    class MySlider extends HTMLElement {
+      constructor() {
+        super();
+        this.attachShadow({ mode: 'open' });
+
+        const label = this.getAttribute('label') || '';
+        const color = this.getAttribute('color') || 'R';
+        const value = this.getAttribute('value') || 0;
+
+        this.shadowRoot.innerHTML = `
+          <style>
+            .slider-group {
+              display: flex;
+              justify-content: center;
+              align-items: center;
+              margin: 10px 0;
+            }
+            label {
+              width: 30px;
+              font-weight: bold;
+            }
+            input[type=range] {
+              width: 200px;
+              margin: 0 10px;
+            }
+            span {
+              width: 40px;
+              display: inline-block;
+              text-align: left;
+            }
+          </style>
+          <div class="slider-group">
+            <label>${label}:</label>
+            <input type="range" min="0" max="255" value="${value}">
+            <span>${value}</span>
+          </div>
+        `;
+
+        const slider = this.shadowRoot.querySelector('input');
+        const valueDisplay = this.shadowRoot.querySelector('span');
+
+        slider.addEventListener('input', () => {
+          valueDisplay.textContent = slider.value;
+          this.dispatchEvent(new CustomEvent('color-change', {
+            detail: { color, value: parseInt(slider.value) },
+            bubbles: true
+          }));
+        });
+      }
+
+      getColorValue() {
+        return parseInt(this.shadowRoot.querySelector('input').value);
+      }
+
+      setColorValue(val) {
+        this.shadowRoot.querySelector('input').value = val;
+        this.shadowRoot.querySelector('span').textContent = val;
+      }
+    }
+
+    customElements.define('my-slider', MySlider);
+
+    // 設定顏色變化邏輯
+    const sliders = document.querySelectorAll('my-slider');
+    const colorBox = document.getElementById('color-box');
+
+    let rgb = {
+      R: parseInt(sliders[0].getColorValue()),
+      G: parseInt(sliders[1].getColorValue()),
+      B: parseInt(sliders[2].getColorValue())
+    };
+
+    function updateColor() {
+      colorBox.style.backgroundColor = `rgb(${rgb.R}, ${rgb.G}, ${rgb.B})`;
+    }
+
+    sliders.forEach(slider => {
+      slider.addEventListener('color-change', e => {
+        rgb[e.detail.color] = e.detail.value;
+        updateColor();
+      });
+    });
+
+    // 初始色
+    updateColor();
+  </script>
+</body>
+</html>
